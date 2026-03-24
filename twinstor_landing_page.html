@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Twinstor AI Blockchain — C-Omega VLLM Validator Node. Run 10+ open-source LLMs with FHE encryption and ZK proofs. Stake 5,000 TWN for 10,000 AI inference calls per day.">
+<title>Twinstor AI Blockchain — C-Omega VLLM Node</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Share+Tech+Mono&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{--lime:#8dff00;--blue:#00cfff;--purple:#b060ff;--amber:#ffb800;--teal:#00ffcc;--red:#ff3a3a;--bg:#030508;--card:#0d1219;--border:rgba(141,255,0,0.12);--text:#d8e8f0;--muted:#4a6070;--mid:#8090a0;}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden;cursor:crosshair;}
+body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.025) 2px,rgba(0,0,0,0.025) 4px);pointer-events:none;z-index:9999;}
+#circuit{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:0.16;}
+.cursor-glow{position:fixed;pointer-events:none;z-index:9998;width:280px;height:280px;border-radius:50%;background:radial-gradient(circle,rgba(141,255,0,0.04) 0%,transparent 70%);transform:translate(-50%,-50%);transition:left .12s linear,top .12s linear;}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:1rem 3rem;background:linear-gradient(180deg,rgba(3,5,8,.96) 0%,transparent 100%);backdrop-filter:blur(8px);border-bottom:1px solid rgba(141,255,0,.05);}
+.nav-logo{display:flex;align-items:center;gap:12px;text-decoration:none;}
+.nav-chip{width:32px;height:32px;border:1.5px solid var(--lime);display:grid;place-items:center;font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--lime);animation:chipglow 3s ease-in-out infinite;}
+@keyframes chipglow{0%,100%{box-shadow:0 0 6px rgba(141,255,0,.3);}50%{box-shadow:0 0 20px rgba(141,255,0,.6),0 0 40px rgba(141,255,0,.15);}}
+.nav-name{font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:.12em;color:var(--lime);}
+.nav-links{display:flex;gap:2rem;align-items:center;}
+.nav-links a{font-family:'Share Tech Mono',monospace;font-size:.63rem;color:var(--muted);text-decoration:none;letter-spacing:.15em;text-transform:uppercase;transition:color .2s;}
+.nav-links a:hover{color:var(--lime);}
+.nav-cta{font-family:'Share Tech Mono',monospace;font-size:.63rem;padding:8px 18px;border:1px solid var(--lime);color:var(--lime);background:rgba(141,255,0,.06);text-decoration:none;letter-spacing:.12em;transition:all .2s;}
+.nav-cta:hover{background:var(--lime);color:#000;}
+@media(max-width:768px){nav{padding:1rem 1.2rem;}.nav-links{display:none;}}
+
+/* HERO */
+.hero{position:relative;z-index:1;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:8rem 2rem 5rem;overflow:hidden;}
+.hero-glow{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:700px;height:700px;background:radial-gradient(ellipse at center,rgba(141,255,0,.045) 0%,transparent 65%);pointer-events:none;}
+.hero-eyebrow{font-family:'Share Tech Mono',monospace;font-size:.63rem;letter-spacing:.28em;color:var(--lime);text-transform:uppercase;margin-bottom:1.5rem;opacity:0;animation:fadeUp .8s .2s ease forwards;}
+.hero-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(4rem,12vw,9rem);line-height:.9;letter-spacing:.04em;color:#fff;margin-bottom:.3rem;opacity:0;animation:fadeUp .9s .35s ease forwards;}
+.hero-title .acc{color:var(--lime);display:block;}
+.hero-sub{font-family:'Bebas Neue',sans-serif;font-size:clamp(1.1rem,3.5vw,2.2rem);letter-spacing:.2em;color:var(--blue);margin-bottom:2rem;opacity:0;animation:fadeUp .9s .5s ease forwards;}
+.hero-desc{font-size:1rem;line-height:1.75;color:var(--mid);max-width:600px;margin:0 auto 2.5rem;font-weight:300;opacity:0;animation:fadeUp .9s .65s ease forwards;}
+.hero-desc strong{color:var(--text);font-weight:500;}
+.hero-stats{display:flex;gap:0;margin-bottom:3rem;border:1px solid var(--border);opacity:0;animation:fadeUp .9s .8s ease forwards;flex-wrap:wrap;}
+.hst{padding:.9rem 1.8rem;border-right:1px solid var(--border);text-align:center;}
+.hst:last-child{border-right:none;}
+.hst-val{font-family:'Bebas Neue',sans-serif;font-size:1.9rem;letter-spacing:.06em;line-height:1;display:block;margin-bottom:3px;}
+.hst-lbl{font-family:'Share Tech Mono',monospace;font-size:.52rem;color:var(--muted);letter-spacing:.14em;}
+@media(max-width:600px){.hst{border-right:none;border-bottom:1px solid var(--border);flex:1 0 45%;}.hst:last-child{border-bottom:none;}}
+.hero-btns{display:flex;gap:1rem;flex-wrap:wrap;justify-content:center;opacity:0;animation:fadeUp .9s .95s ease forwards;}
+.btn-p{font-family:'Share Tech Mono',monospace;font-size:.72rem;letter-spacing:.14em;padding:13px 34px;background:var(--lime);color:#000;font-weight:bold;border:none;cursor:pointer;text-decoration:none;display:inline-block;transition:all .25s;text-transform:uppercase;}
+.btn-p:hover{background:#b8ff40;box-shadow:0 0 28px rgba(141,255,0,.4);transform:translateY(-1px);}
+.btn-s{font-family:'Share Tech Mono',monospace;font-size:.72rem;letter-spacing:.14em;padding:12px 34px;background:transparent;color:var(--blue);border:1px solid var(--blue);cursor:pointer;text-decoration:none;display:inline-block;transition:all .25s;text-transform:uppercase;}
+.btn-s:hover{background:rgba(0,207,255,.07);box-shadow:0 0 18px rgba(0,207,255,.2);}
+.scroll-ind{position:absolute;bottom:2rem;left:50%;transform:translateX(-50%);font-family:'Share Tech Mono',monospace;font-size:.52rem;color:var(--muted);letter-spacing:.2em;display:flex;flex-direction:column;align-items:center;gap:7px;animation:bounce 2s ease-in-out infinite;}
+.scroll-ind::after{content:'';width:1px;height:36px;background:linear-gradient(180deg,var(--muted),transparent);}
+@keyframes bounce{0%,100%{transform:translateX(-50%) translateY(0);}50%{transform:translateX(-50%) translateY(6px);}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(18px);}to{opacity:1;transform:translateY(0);}}
+
+/* TICKER */
+.ticker{position:relative;z-index:2;background:rgba(141,255,0,.05);border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:9px 0;overflow:hidden;}
+.ticker-inner{display:flex;gap:3.5rem;animation:tick 28s linear infinite;white-space:nowrap;width:max-content;}
+.t-item{font-family:'Share Tech Mono',monospace;font-size:.62rem;letter-spacing:.12em;color:var(--lime);display:flex;align-items:center;gap:.5rem;}
+@keyframes tick{from{transform:translateX(0);}to{transform:translateX(-50%);}}
+
+/* SECTIONS */
+.sec{position:relative;z-index:1;padding:5.5rem 2rem;max-width:1180px;margin:0 auto;}
+.sec-label{font-family:'Share Tech Mono',monospace;font-size:.58rem;letter-spacing:.28em;color:var(--lime);text-transform:uppercase;margin-bottom:.9rem;display:flex;align-items:center;gap:10px;}
+.sec-label::before{content:'';width:26px;height:1px;background:var(--lime);}
+.sec-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(2.4rem,6vw,4.2rem);letter-spacing:.05em;line-height:1;margin-bottom:1.5rem;}
+
+/* DISTINCTION */
+.dist-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-top:2.5rem;}
+@media(max-width:740px){.dist-grid{grid-template-columns:1fr;}}
+.dist-card{padding:2rem;border:1px solid;position:relative;overflow:hidden;}
+.dist-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
+.dc-omega{border-color:rgba(141,255,0,.22);background:rgba(141,255,0,.025);}
+.dc-omega::before{background:var(--lime);}
+.dc-godel{border-color:rgba(176,96,255,.22);background:rgba(176,96,255,.025);}
+.dc-godel::before{background:var(--purple);}
+.dc-tag{font-family:'Share Tech Mono',monospace;font-size:.52rem;letter-spacing:.18em;text-transform:uppercase;margin-bottom:.65rem;display:block;}
+.dc-name{font-family:'Bebas Neue',sans-serif;font-size:1.75rem;letter-spacing:.07em;margin-bottom:.9rem;}
+.dc-desc{font-size:.88rem;color:var(--mid);line-height:1.7;font-weight:300;}
+
+/* STACK */
+.stack{display:flex;flex-direction:column;gap:0;margin-top:2.5rem;}
+.slayer{display:flex;align-items:center;padding:1.2rem 1.6rem;border:1px solid var(--border);border-bottom:none;transition:all .3s;}
+.slayer:last-child{border-bottom:1px solid var(--border);}
+.slayer:hover{background:rgba(141,255,0,.03);border-color:rgba(141,255,0,.28);}
+.sl-n{font-family:'Bebas Neue',sans-serif;font-size:2.3rem;color:rgba(255,255,255,.055);min-width:55px;transition:color .3s;}
+.slayer:hover .sl-n{color:var(--lime);}
+.sl-b{flex:1;}
+.sl-name{font-family:'Share Tech Mono',monospace;font-size:.7rem;letter-spacing:.09em;margin-bottom:3px;}
+.sl-desc{font-size:.83rem;color:var(--mid);font-weight:300;}
+.sl-badge{font-family:'Share Tech Mono',monospace;font-size:.52rem;letter-spacing:.1em;padding:3px 9px;border:1px solid;}
+
+/* EMISSION */
+.emit-wrap{background:rgba(10,15,24,.65);border:1px solid var(--border);padding:2.5rem;margin-top:2.5rem;}
+.emit-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(148px,1fr));gap:1px;background:var(--border);margin-top:1.75rem;}
+.etier{background:var(--bg);padding:1.4rem 1.1rem;text-align:center;transition:background .2s;}
+.etier:hover{background:rgba(141,255,0,.04);}
+.et-stake{font-family:'Bebas Neue',sans-serif;font-size:1.15rem;letter-spacing:.06em;display:block;margin-bottom:5px;}
+.et-mult{font-family:'Share Tech Mono',monospace;font-size:.56rem;letter-spacing:.1em;color:var(--muted);display:block;margin-bottom:9px;}
+.et-calls{font-family:'Share Tech Mono',monospace;font-size:.6rem;line-height:1.9;}
+
+/* MODELS */
+.mods-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(195px,1fr));gap:1px;background:var(--border);margin-top:2rem;}
+.mcard{background:var(--card);padding:1.2rem;display:flex;flex-direction:column;gap:5px;transition:background .2s;}
+.mcard:hover{background:rgba(141,255,0,.04);}
+.mdot-name{display:flex;align-items:center;gap:7px;}
+.mdot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.mname{font-size:.83rem;font-weight:500;}
+.mpar{font-family:'Share Tech Mono',monospace;font-size:.56rem;color:var(--muted);}
+.mdesc{font-size:.74rem;color:var(--muted);line-height:1.5;font-weight:300;}
+.coord-card{background:rgba(255,184,0,.06);padding:1.2rem;border:1px solid rgba(255,184,0,.3);grid-column:1 / -1;display:flex;gap:1rem;align-items:flex-start;}
+.coord-icon{width:40px;height:40px;flex-shrink:0;border:1px solid var(--amber);display:grid;place-items:center;font-family:'Share Tech Mono',monospace;font-size:.5rem;color:var(--amber);text-align:center;line-height:1.4;animation:coordpulse 2.2s ease-in-out infinite;}
+@keyframes coordpulse{0%,100%{box-shadow:0 0 6px rgba(255,184,0,.3);}50%{box-shadow:0 0 18px rgba(255,184,0,.6);}}
+.coord-body h4{font-size:.93rem;font-weight:500;color:var(--amber);margin-bottom:4px;}
+.coord-body p{font-size:.8rem;color:var(--mid);line-height:1.65;font-weight:300;}
+
+/* PRIVACY */
+.arch-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1.4rem;margin-top:2.2rem;}
+.acard{padding:1.65rem;border:1px solid var(--border);background:var(--card);position:relative;overflow:hidden;transition:border-color .3s;}
+.acard:hover{border-color:rgba(141,255,0,.28);}
+.acard::after{content:attr(data-n);position:absolute;right:.9rem;bottom:.3rem;font-family:'Bebas Neue',sans-serif;font-size:3.8rem;color:rgba(255,255,255,.03);pointer-events:none;}
+.ac-tag{font-family:'Share Tech Mono',monospace;font-size:.56rem;letter-spacing:.14em;margin-bottom:.7rem;padding:3px 8px;border:1px solid;display:inline-block;}
+.ac-title{font-size:.97rem;font-weight:500;margin-bottom:.55rem;}
+.ac-desc{font-size:.8rem;color:var(--mid);line-height:1.65;font-weight:300;}
+
+/* SALE */
+.sale-sec{position:relative;z-index:1;background:linear-gradient(135deg,rgba(141,255,0,.06) 0%,rgba(0,207,255,.04) 50%,rgba(176,96,255,.04) 100%);border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:6rem 2rem;text-align:center;overflow:hidden;}
+.sale-sec::before{content:'PRIVATE SALE';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-family:'Bebas Neue',sans-serif;font-size:clamp(5rem,18vw,16rem);color:rgba(141,255,0,.022);letter-spacing:.1em;white-space:nowrap;pointer-events:none;}
+.sale-inner{position:relative;max-width:780px;margin:0 auto;}
+.sale-eyebrow{font-family:'Share Tech Mono',monospace;font-size:.63rem;letter-spacing:.28em;color:var(--lime);margin-bottom:1.4rem;display:block;}
+.sale-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(2.8rem,8vw,5.8rem);line-height:1;letter-spacing:.05em;margin-bottom:1.4rem;}
+.sale-hl{color:var(--lime);}
+.sale-desc{font-size:.97rem;color:var(--mid);line-height:1.78;margin-bottom:2.2rem;font-weight:300;}
+.sale-desc strong{color:var(--text);font-weight:500;}
+.cd-row{display:flex;gap:1px;justify-content:center;margin-bottom:2.2rem;background:var(--border);}
+.cdb{background:var(--card);padding:1.1rem 1.8rem;text-align:center;min-width:82px;}
+.cd-v{font-family:'Bebas Neue',sans-serif;font-size:2.8rem;color:var(--amber);line-height:1;display:block;}
+.cd-l{font-family:'Share Tech Mono',monospace;font-size:.48rem;color:var(--muted);letter-spacing:.18em;display:block;margin-top:3px;}
+.sale-form{display:flex;max-width:500px;margin:0 auto 1.2rem;border:1px solid var(--lime);}
+.s-input{flex:1;background:rgba(141,255,0,.04);border:none;color:var(--text);font-family:'Share Tech Mono',monospace;font-size:.7rem;padding:13px 16px;outline:none;letter-spacing:.07em;}
+.s-input::placeholder{color:var(--muted);}
+.s-sub{padding:13px 22px;background:var(--lime);border:none;color:#000;font-family:'Share Tech Mono',monospace;font-size:.7rem;letter-spacing:.12em;cursor:pointer;font-weight:bold;transition:background .2s;white-space:nowrap;}
+.s-sub:hover{background:#b8ff40;}
+.sale-note{font-family:'Share Tech Mono',monospace;font-size:.56rem;color:var(--muted);letter-spacing:.1em;}
+.sale-links{display:flex;gap:1.5rem;justify-content:center;margin-top:1.75rem;flex-wrap:wrap;}
+.sl-a{font-family:'Share Tech Mono',monospace;font-size:.63rem;color:var(--blue);text-decoration:none;letter-spacing:.12em;transition:color .2s;display:flex;align-items:center;gap:5px;}
+.sl-a::before{content:'→';}
+.sl-a:hover{color:var(--lime);}
+
+/* ROADMAP */
+.rm{display:flex;flex-direction:column;gap:0;margin-top:2.2rem;}
+.rm-item{display:grid;grid-template-columns:110px 1px 1fr;gap:0 1.8rem;padding-bottom:2.2rem;}
+.rm-item:last-child{padding-bottom:0;}
+.rm-date{font-family:'Share Tech Mono',monospace;font-size:.62rem;color:var(--muted);letter-spacing:.1em;padding-top:3px;text-align:right;}
+.rm-line{background:var(--border);position:relative;}
+.rm-line::before{content:'';position:absolute;top:7px;left:50%;transform:translateX(-50%);width:8px;height:8px;border-radius:50%;border:1.5px solid;}
+.rml-done::before{background:var(--lime);border-color:var(--lime);box-shadow:0 0 8px rgba(141,255,0,.5);}
+.rml-act::before{background:var(--amber);border-color:var(--amber);animation:blink 1.2s infinite;}
+.rml-fut::before{background:transparent;border-color:var(--muted);}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:.25;}}
+.rm-title{font-size:.97rem;font-weight:500;margin-bottom:3px;}
+.rm-desc{font-size:.8rem;color:var(--mid);font-weight:300;line-height:1.6;}
+
+/* FOOTER */
+.footer-wrap{position:relative;z-index:1;border-top:1px solid var(--border);padding:2.8rem 2rem;max-width:1180px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1.2rem;}
+.f-brand{display:flex;align-items:center;gap:10px;}
+.f-name{font-family:'Bebas Neue',sans-serif;font-size:1.05rem;letter-spacing:.12em;color:var(--lime);}
+.f-links{display:flex;gap:1.4rem;flex-wrap:wrap;}
+.f-links a{font-family:'Share Tech Mono',monospace;font-size:.58rem;color:var(--muted);text-decoration:none;letter-spacing:.1em;transition:color .2s;}
+.f-links a:hover{color:var(--lime);}
+.f-disc{width:100%;font-family:'Share Tech Mono',monospace;font-size:.52rem;color:var(--muted);letter-spacing:.07em;line-height:1.9;border-top:1px solid var(--border);padding-top:1.2rem;}
+
+/* REVEAL */
+.reveal{opacity:0;transform:translateY(22px);transition:opacity .65s ease,transform .65s ease;}
+.reveal.visible{opacity:1;transform:none;}
+</style>
+</head>
+<body>
+<div class="cursor-glow" id="glow"></div>
+<canvas id="circuit"></canvas>
+
+<nav>
+  <a href="#" class="nav-logo">
+    <div class="nav-chip">TWN</div>
+    <span class="nav-name">TWINSTOR</span>
+  </a>
+  <div class="nav-links">
+    <a href="#how">Architecture</a>
+    <a href="#emission">Emission</a>
+    <a href="#models">Models</a>
+    <a href="#roadmap">Roadmap</a>
+    <a href="https://aumnium.tech" target="_blank" rel="noopener">Aumnium</a>
+  </div>
+  <a href="#sale" class="nav-cta">STAKE TWN →</a>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-glow"></div>
+  <div class="hero-eyebrow">EVM-Compatible AI Blockchain // Private Sale Live // twinstor.xyz</div>
+  <h1 class="hero-title">C-OMEGA<span class="acc">VLLM NODE</span></h1>
+  <div class="hero-sub">FHE · ZK · BFT · 10+ LLMs · On-Chain AI</div>
+  <p class="hero-desc">The world's first ASIC validator node that runs <strong>10+ open-source LLMs simultaneously</strong>, encrypted end-to-end with Fully Homomorphic Encryption, coordinated by a master AI agent, and validated on an EVM-compatible blockchain.</p>
+  <div class="hero-stats">
+    <div class="hst"><span class="hst-val" style="color:var(--lime)">10,000</span><span class="hst-lbl">LOCAL CALLS/DAY</span></div>
+    <div class="hst"><span class="hst-val" style="color:var(--blue)">1,000</span><span class="hst-lbl">ON-CHAIN CALLS/DAY</span></div>
+    <div class="hst"><span class="hst-val" style="color:var(--amber)">5,000</span><span class="hst-lbl">TWN MIN STAKE</span></div>
+    <div class="hst"><span class="hst-val" style="color:var(--purple)">1000x+</span><span class="hst-lbl">MAX MULTIPLIER</span></div>
+  </div>
+  <div class="hero-btns">
+    <a href="#sale" class="btn-p">STAKE TWN — GET YOUR NODE</a>
+    <a href="https://x.com/hypershares" target="_blank" rel="noopener" class="btn-s">FOLLOW ON X →</a>
+  </div>
+  <div class="scroll-ind">SCROLL</div>
+</div>
+
+<!-- TICKER -->
+<div class="ticker"><div class="ticker-inner" id="tick"></div></div>
+
+<!-- DISTINCTION -->
+<div class="sec" id="distinction">
+  <div class="sec-label">Two Technologies</div>
+  <h2 class="sec-title reveal">C-OMEGA VS<br>GÖDEL HPU</h2>
+  <div class="dist-grid">
+    <div class="dist-card dc-omega reveal">
+      <span class="dc-tag" style="color:var(--lime)">THIS DEVICE — TWINSTOR AI BLOCKCHAIN</span>
+      <div class="dc-name" style="color:var(--lime)">C-Omega ASIC<br>Validator Node</div>
+      <p class="dc-desc">An EVM-compatible VLLM inference engine and BFT validator for the Twinstor AI Blockchain. Runs 10+ open-source LLMs coordinated by a master AI agent — serving external users and internal AI agents simultaneously with FHE-encrypted, ZK-verified inference. Stake TWN to generate API emission credits.</p>
+    </div>
+    <div class="dist-card dc-godel reveal">
+      <span class="dc-tag" style="color:var(--purple)">SISTER TECHNOLOGY — AUMNIUM.TECH</span>
+      <div class="dc-name" style="color:var(--purple)">Gödel HPU<br>Supraturing Prime Core</div>
+      <p class="dc-desc">A separate magnonic-photonic hypercomputing chip powering Aumnium's suprahuman machine cognition layer for fully autonomous embodied physical agents — humanoid robots, military drones, passenger drones, space drones, nanobot swarms, and industrial smart matter nodes.</p>
+    </div>
+  </div>
+</div>
+
+<!-- HOW IT WORKS -->
+<div class="sec" id="how" style="padding-top:0;">
+  <div class="sec-label">Architecture</div>
+  <h2 class="sec-title reveal">HOW C-OMEGA<br>WORKS</h2>
+  <div class="stack">
+    <div class="slayer reveal"><div class="sl-n">01</div><div class="sl-b"><div class="sl-name" style="color:var(--amber)">COORDINATION AGENT — LLM MANAGER</div><div class="sl-desc">Master AI orchestration layer routes all queries from external users and internal AI agents to the optimal LLM, merges outputs, manages context, and batches inference calls for maximum throughput.</div></div><div class="sl-badge" style="border-color:var(--amber);color:var(--amber)">ACTIVE</div></div>
+    <div class="slayer reveal"><div class="sl-n">02</div><div class="sl-b"><div class="sl-name" style="color:var(--purple)">FHE ENGINE — FULLY HOMOMORPHIC ENCRYPTION</div><div class="sl-desc">On-chip CKKS lattice acceleration performs AI inference entirely on encrypted data. Prompts and outputs are never decrypted — not by the node, not by the network, not by anyone.</div></div><div class="sl-badge" style="border-color:var(--purple);color:var(--purple)">CKKS</div></div>
+    <div class="slayer reveal"><div class="sl-n">03</div><div class="sl-b"><div class="sl-name" style="color:var(--teal)">ZK PROOF ENGINE — VERIFIABLE INFERENCE</div><div class="sl-desc">2,100+ zero-knowledge proofs per second. Every inference result carries a cryptographic proof of correctness committed to the Twinstor chain — tamper-proof, auditable AI outputs on-chain.</div></div><div class="sl-badge" style="border-color:var(--teal);color:var(--teal)">2,100/s</div></div>
+    <div class="slayer reveal"><div class="sl-n">04</div><div class="sl-b"><div class="sl-name" style="color:var(--teal)">FEDERATED ZK LEARNING — PRIVATE FINE-TUNING</div><div class="sl-desc">Custom LLM fine-tuning across distributed C-Omega nodes using zero-knowledge proofs. Models improve collectively — no node ever shares raw training data with any other node.</div></div><div class="sl-badge" style="border-color:var(--teal);color:var(--teal)">FEDERATED</div></div>
+    <div class="slayer reveal"><div class="sl-n">05</div><div class="sl-b"><div class="sl-name" style="color:var(--blue)">EVM-COMPATIBLE BFT VALIDATOR</div><div class="sl-desc">C-Omega nodes validate Twinstor blockchain blocks via Pipelined Byzantine Fault Tolerant consensus (~400ms finality). Full EVM compatibility — existing Ethereum tooling works natively.</div></div><div class="sl-badge" style="border-color:var(--blue);color:var(--blue)">EVM</div></div>
+    <div class="slayer reveal"><div class="sl-n">06</div><div class="sl-b"><div class="sl-name" style="color:var(--lime)">TWN EMISSION — API CREDIT SCORE</div><div class="sl-desc">Staking 5,000+ TWN generates daily token emissions used as API credits: 10,000 local + 1,000 on-chain calls per 24h at base. Stake more to multiply up to 1,000x+. ERC20 swaps 1:1 at mainnet.</div></div><div class="sl-badge" style="border-color:var(--lime);color:var(--lime)">ERC20</div></div>
+  </div>
+</div>
+
+<!-- EMISSION -->
+<div class="sec" id="emission" style="padding-top:0;">
+  <div class="sec-label">Tokenomics</div>
+  <h2 class="sec-title reveal">TWN EMISSION MODEL</h2>
+  <div class="emit-wrap reveal">
+    <p style="color:var(--mid);font-size:.88rem;line-height:1.75;font-weight:300;max-width:620px;">Staking TWN generates daily emissions as API credit scores. Base tier (5,000 TWN) gives <strong style="color:var(--lime)">10,000 local + 1,000 on-chain inference calls every 24 hours</strong>. Stake more to multiply up to 1,000x+.</p>
+    <div class="emit-grid">
+      <div class="etier"><span class="et-stake" style="color:var(--lime)">5,000 TWN</span><span class="et-mult">1x — BASE</span><div class="et-calls"><span style="color:var(--lime)">10,000 local</span><span style="color:var(--blue)">1,000 chain</span><span style="color:var(--muted)">/24h</span></div></div>
+      <div class="etier"><span class="et-stake" style="color:var(--blue)">10,000 TWN</span><span class="et-mult">2x</span><div class="et-calls"><span style="color:var(--lime)">20,000 local</span><span style="color:var(--blue)">2,000 chain</span><span style="color:var(--muted)">/24h</span></div></div>
+      <div class="etier"><span class="et-stake" style="color:var(--purple)">25,000 TWN</span><span class="et-mult">5x</span><div class="et-calls"><span style="color:var(--lime)">50,000 local</span><span style="color:var(--blue)">5,000 chain</span><span style="color:var(--muted)">/24h</span></div></div>
+      <div class="etier"><span class="et-stake" style="color:var(--amber)">50,000 TWN</span><span class="et-mult">10x</span><div class="et-calls"><span style="color:var(--lime)">100,000 local</span><span style="color:var(--blue)">10,000 chain</span><span style="color:var(--muted)">/24h</span></div></div>
+      <div class="etier"><span class="et-stake" style="color:var(--teal)">500,000 TWN</span><span class="et-mult">100x</span><div class="et-calls"><span style="color:var(--lime)">1M local</span><span style="color:var(--blue)">100,000 chain</span><span style="color:var(--muted)">/24h</span></div></div>
+      <div class="etier"><span class="et-stake" style="color:var(--red)">5,000,000 TWN</span><span class="et-mult">1000x+</span><div class="et-calls"><span style="color:var(--lime)">10M+ local</span><span style="color:var(--blue)">1M+ chain</span><span style="color:var(--muted)">/24h</span></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- MODELS -->
+<div class="sec" id="models" style="padding-top:0;">
+  <div class="sec-label">LLM Stack</div>
+  <h2 class="sec-title reveal">10+ OPEN-SOURCE<br>LLMS ON-CHIP</h2>
+  <div class="mods-grid reveal">
+    <div class="coord-card"><div class="coord-icon">COORD<br>AGENT</div><div class="coord-body"><h4>Coordination Agent — LLM Manager</h4><p>The master orchestration layer above all LLMs. Routes queries from external users and internal AI agents to the optimal model, merges outputs, manages context windows across simultaneous sessions, and batches inference calls for maximum efficiency. The intelligent API gateway for the entire C-Omega node.</p></div></div>
+    <div class="mcard"><div class="mdot-name"><div class="mdot" style="background:#8dff00"></div><div class="mname">GLM-4-9B</div></div><div class="mpar">9B PARAMS</div><div class="mdesc">Knowledge graph + multilingual reasoning</div></div>
+    <div class="mcard"><div class="mdot-name"><div class="mdot" style="background:#00cfff"></div><div class="mname">Llama-3.1-8B</div></div><div class="mpar">8B PARAMS</div><div class="mdesc">General purpose — 128k context window</div></div>
+    <div class="mcard"><div class="mdot-name"><div class="mdot" style="background:#b060ff"></div><div class="mname">Mistral-7B</div></div><div class="mpar">7B PARAMS</div><div class="mdesc">Fast inference + sliding window attention</div></div>
+    <div class="mcard"><div class="mdot-name"><div class="mdot" style="background:#ffb800"></div><div class="mname">Qwen2.5-7B</div></div><div class="mpar">7B PARAMS</div><div class="mdesc">Multilingual + math + code reasoning</div></div>
+    <div class="mcard"><div class="mdot-name"><div class="mdot" style="background:#00ffcc"></div><div class="mname">DeepSeek-R1-7B</div></div><div class="mpar">7B PARAMS</div><div class="mdesc">Chain-of-thought scientific reasoning</div></div>
+    <div class="mcard"><div class="mdot-name"><div class="mdot" style="background:#ff3a3a"></div><div class="mname">Phi-4-Mini</div></div><div class="mpar">3.8B PARAMS</div><div class="mdesc">Compact high-performance reasoning</div></div>
+    <div class="mcard"><div class="mdot-name"><div class="mdot" style="background:#ff60c0"></div><div class="mname">Gemma-3-4B</div></div><div class="mpar">4B PARAMS</div><div class="mdesc">Efficient vision + language inference</div></div>
+    <div class="mcard"><div class="mdot-name"><div class="mdot" style="background:#60ff80"></div><div class="mname">CodeGemma-7B</div></div><div class="mpar">7B PARAMS</div><div class="mdesc">Code generation + smart contract security</div></div>
+    <div class="mcard"><div class="mdot-name"><div class="mdot" style="background:#a0c0ff"></div><div class="mname">Qwen2.5-Coder</div></div><div class="mpar">7B PARAMS</div><div class="mdesc">DeFi + blockchain code analysis</div></div>
+    <div class="mcard"><div class="mdot-name"><div class="mdot" style="background:#ffd060"></div><div class="mname">GLM-Z1-9B</div></div><div class="mpar">9B PARAMS</div><div class="mdesc">Scientific research + math proofs</div></div>
+  </div>
+</div>
+
+<!-- PRIVACY ARCH -->
+<div class="sec" style="padding-top:0;">
+  <div class="sec-label">Privacy</div>
+  <h2 class="sec-title reveal">PRIVACY<br>ARCHITECTURE</h2>
+  <div class="arch-grid">
+    <div class="acard reveal" data-n="01"><div class="ac-tag" style="border-color:var(--purple);color:var(--purple)">FHE</div><div class="ac-title" style="color:var(--purple)">Fully Homomorphic Encryption</div><p class="ac-desc">On-chip CKKS lattice acceleration. Inference runs on encrypted data — prompts and outputs never decrypted outside your hardware.</p></div>
+    <div class="acard reveal" data-n="02"><div class="ac-tag" style="border-color:var(--teal);color:var(--teal)">ZK LEARNING</div><div class="ac-title" style="color:var(--teal)">Federated Zero-Knowledge</div><p class="ac-desc">Custom LLM fine-tuning using ZK proofs. Models improve across nodes without any node sharing raw training data.</p></div>
+    <div class="acard reveal" data-n="03"><div class="ac-tag" style="border-color:var(--blue);color:var(--blue)">BFT</div><div class="ac-title" style="color:var(--blue)">Byzantine Fault Tolerant</div><p class="ac-desc">Pipelined BFT consensus (~400ms finality). Inference results verified by 2/3+ validators — tamper-proof on-chain AI.</p></div>
+    <div class="acard reveal" data-n="04"><div class="ac-tag" style="border-color:var(--lime);color:var(--lime)">ON-CHAIN</div><div class="ac-title" style="color:var(--lime)">Model Provenance Registry</div><p class="ac-desc">Every model version and fine-tune delta recorded immutably on Twinstor blockchain via the TWN token protocol.</p></div>
+  </div>
+</div>
+
+<!-- SALE CTA -->
+<div class="sale-sec" id="sale">
+  <div class="sale-inner">
+    <span class="sale-eyebrow">PRIVATE SALE — CLOSES JULY 30, 2026</span>
+    <h2 class="sale-title">STAKE <span class="sale-hl">5,000+</span><br>TWN TOKENS</h2>
+    <p class="sale-desc">Receive a physical <strong>C-Omega ASIC</strong> validator + inference node. Base emission: <strong>10,000 local AI calls + 1,000 on-chain calls per 24 hours</strong>. Stake more to multiply up to <strong>1,000x+</strong>. ERC20 TWN swaps <strong>1:1</strong> to mainnet protocol tokens at launch.</p>
+    <div class="cd-row">
+      <div class="cdb"><span class="cd-v" id="cdd">--</span><span class="cd-l">DAYS</span></div>
+      <div class="cdb"><span class="cd-v" id="cdh">--</span><span class="cd-l">HOURS</span></div>
+      <div class="cdb"><span class="cd-v" id="cdm">--</span><span class="cd-l">MINS</span></div>
+      <div class="cdb"><span class="cd-v" id="cds">--</span><span class="cd-l">SECS</span></div>
+    </div>
+    <div class="sale-form">
+      <input class="s-input" type="email" id="email-in" placeholder="enter email for early access..." />
+      <button class="s-sub" onclick="doSub()">JOIN SALE →</button>
+    </div>
+    <div class="sale-note" id="s-note">min. 5,000 TWN stake required // ERC20 → mainnet 1:1 swap at launch</div>
+    <div class="sale-links">
+      <a href="https://twinstor.xyz" target="_blank" rel="noopener" class="sl-a">twinstor.xyz</a>
+      <a href="https://aumnium.tech" target="_blank" rel="noopener" class="sl-a">aumnium.tech</a>
+      <a href="https://x.com/hypershares" target="_blank" rel="noopener" class="sl-a">x.com/hypershares</a>
+      <a href="https://tinyurl.com/bdchazey" target="_blank" rel="noopener" class="sl-a">LinkedIn</a>
+    </div>
+  </div>
+</div>
+
+<!-- ROADMAP -->
+<div class="sec" id="roadmap">
+  <div class="sec-label">Timeline</div>
+  <h2 class="sec-title reveal">ROADMAP</h2>
+  <div class="rm">
+    <div class="rm-item reveal"><div class="rm-date">Q1 2026</div><div class="rm-line rml-done"></div><div><div class="rm-title" style="color:var(--lime)">TWN ERC20 Token Launch</div><div class="rm-desc">ERC20 TWN deployed. Private sale opens. C-Omega ASIC design finalised. Technology demonstrator published.</div></div></div>
+    <div class="rm-item reveal"><div class="rm-date">Q2 2026</div><div class="rm-line rml-act"></div><div><div class="rm-title" style="color:var(--amber)">Private Sale + Node Allocation ← NOW</div><div class="rm-desc">Sale closes July 30, 2026. C-Omega nodes allocated to qualified stakers. FHE testnet live. Coordination Agent alpha released.</div></div></div>
+    <div class="rm-item reveal"><div class="rm-date">Q3 2026</div><div class="rm-line rml-fut"></div><div><div class="rm-title">Mainnet Launch + Node Delivery</div><div class="rm-desc">Twinstor mainnet goes live. ERC20 TWN swaps 1:1 to native tokens. C-Omega nodes shipped. Emission model activates.</div></div></div>
+    <div class="rm-item reveal"><div class="rm-date">Q4 2026</div><div class="rm-line rml-fut"></div><div><div class="rm-title">CEX/DEX Listings + Ecosystem Grants</div><div class="rm-desc">TWN listed on major exchanges. Developer grants launch. Federated ZK learning mainnet activation.</div></div></div>
+    <div class="rm-item reveal"><div class="rm-date">2027+</div><div class="rm-line rml-fut"></div><div><div class="rm-title">Physical AI Stack — Full Deployment</div><div class="rm-desc">World Labs + AMI Labs co-investment structure. Aumnium Gödel HPU + Twinstor on-chain AI trust layer deployed at scale.</div></div></div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<div class="footer-wrap">
+  <div class="f-brand">
+    <div class="nav-chip" style="width:28px;height:28px;font-size:7px;">TWN</div>
+    <span class="f-name">TWINSTOR</span>
+  </div>
+  <div class="f-links">
+    <a href="https://twinstor.xyz" target="_blank" rel="noopener">twinstor.xyz</a>
+    <a href="https://aumnium.tech" target="_blank" rel="noopener">aumnium.tech</a>
+    <a href="https://x.com/hypershares" target="_blank" rel="noopener">X: @hypershares</a>
+    <a href="https://tinyurl.com/bdchazey" target="_blank" rel="noopener">LinkedIn</a>
+  </div>
+  <div class="f-disc">
+    Not financial advice. TWN tokens are ERC20 utility tokens that swap 1:1 to Twinstor native protocol tokens at mainnet launch.
+    For informational purposes only. Private sale closes July 30, 2026.
+    Twinstor AI Blockchain © 2026 | Sister venture: Aumnium Technology — aumnium.tech
+  </div>
+</div>
+
+<script>
+// CURSOR GLOW
+const glow=document.getElementById('glow');
+document.addEventListener('mousemove',e=>{glow.style.left=e.clientX+'px';glow.style.top=e.clientY+'px';});
+
+// CIRCUIT CANVAS
+const cv=document.getElementById('circuit'),cx=cv.getContext('2d');
+let W,H,ns=[];
+function rsz(){W=cv.width=innerWidth;H=cv.height=innerHeight;}
+rsz();addEventListener('resize',rsz);
+for(let i=0;i<42;i++)ns.push({x:Math.random()*W,y:Math.random()*H,vx:(Math.random()-.5)*.28,vy:(Math.random()-.5)*.28,r:Math.random()*1.2+.4,c:['#8dff00','#00cfff','#b060ff','#ffb800'][i%4]});
+(function dC(){cx.clearRect(0,0,W,H);cx.globalAlpha=.5;ns.forEach(n=>{n.x+=n.vx;n.y+=n.vy;if(n.x<0)n.x=W;if(n.x>W)n.x=0;if(n.y<0)n.y=H;if(n.y>H)n.y=0;cx.beginPath();cx.arc(n.x,n.y,n.r,0,Math.PI*2);cx.fillStyle=n.c;cx.fill();});cx.globalAlpha=.1;ns.forEach((a,i)=>ns.slice(i+1).forEach(b=>{const d=Math.hypot(a.x-b.x,a.y-b.y);if(d<130){cx.beginPath();cx.moveTo(a.x,a.y);cx.lineTo(b.x,b.y);cx.strokeStyle=a.c;cx.lineWidth=.4;cx.stroke();}}));cx.globalAlpha=1;requestAnimationFrame(dC);})();
+
+// TICKER
+const items=['10+ LLMs ON-CHIP','FHE ENCRYPTED','ZK PROOF VERIFIED','EVM COMPATIBLE','STAKE 5,000 TWN','10,000 CALLS/DAY','BFT CONSENSUS','SALE CLOSES JUL 30','twinstor.xyz','COORD AGENT ACTIVE','1000x EMISSION','MAINNET Q3 2026','aumnium.tech','x.com/hypershares','FEDERATED ZK LEARNING'];
+const ti=document.getElementById('tick');
+[...items,...items].forEach(t=>{const d=document.createElement('div');d.className='t-item';d.innerHTML='<span style="color:var(--lime)">◆</span> '+t;ti.appendChild(d);});
+
+// COUNTDOWN
+function uCD(){const diff=new Date('2026-07-30T23:59:59Z')-new Date();if(diff<=0){['cdd','cdh','cdm','cds'].forEach(x=>document.getElementById(x).textContent='00');return;}document.getElementById('cdd').textContent=String(Math.floor(diff/86400000)).padStart(2,'0');document.getElementById('cdh').textContent=String(Math.floor(diff%86400000/3600000)).padStart(2,'0');document.getElementById('cdm').textContent=String(Math.floor(diff%3600000/60000)).padStart(2,'0');document.getElementById('cds').textContent=String(Math.floor(diff%60000/1000)).padStart(2,'0');}
+setInterval(uCD,1000);uCD();
+
+// EMAIL
+function doSub(){const v=document.getElementById('email-in').value.trim();const n=document.getElementById('s-note');if(!v||!v.includes('@')){n.style.color='var(--red)';n.textContent='please enter a valid email address';return;}n.style.color='var(--lime)';n.textContent='registered — you will be notified when the sale opens for your region';document.getElementById('email-in').value='';}
+
+// SCROLL REVEAL
+const revs=document.querySelectorAll('.reveal');
+const obs=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('visible');obs.unobserve(e.target);}});},{threshold:.1});
+revs.forEach((r,i)=>{r.style.transitionDelay=(i%6*.1)+'s';obs.observe(r);});
+</script>
+</body>
+</html>
