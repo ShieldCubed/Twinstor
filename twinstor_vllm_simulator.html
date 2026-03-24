@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Twinstor C-Omega — VLLM Validator Node Demonstrator</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Exo+2:ital,wght@0,300;0,400;0,600;0,800;1,400&display=swap');
+:root{
+  --lime:#8dff00;--blue:#00cfff;--purple:#b060ff;--amber:#ffb800;
+  --red:#ff3a3a;--teal:#00ffcc;--pink:#ff60c0;
+  --bg:#040608;--bg2:#080c10;--bg3:#0d1218;--card:#10161e;
+  --border:rgba(141,255,0,0.14);--text:#dde8f0;--muted:#4e6070;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Exo 2',sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden;}
+canvas#bg{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none;opacity:0.3;}
+.wrap{position:relative;z-index:1;max-width:1440px;margin:0 auto;padding:1.2rem 1.5rem 2rem;}
+
+/* ── HEADER ── */
+header{display:flex;align-items:center;justify-content:space-between;padding-bottom:1rem;border-bottom:1px solid var(--border);gap:1rem;flex-wrap:wrap;}
+.brand{display:flex;align-items:center;gap:14px;}
+.chip-icon{width:44px;height:44px;border:2px solid var(--lime);display:grid;place-items:center;position:relative;flex-shrink:0;}
+.chip-icon::before{content:'';position:absolute;inset:-7px;border:1px solid rgba(141,255,0,0.18);animation:ringpulse 2.4s infinite;}
+.chip-icon span{font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--lime);text-align:center;line-height:1.3;}
+.brand-text .name{font-size:1.15rem;font-weight:800;letter-spacing:0.1em;color:var(--lime);}
+.brand-text .sub{font-family:'Share Tech Mono',monospace;font-size:0.6rem;color:var(--muted);letter-spacing:0.18em;margin-top:2px;}
+.pills{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+.pill{font-family:'Share Tech Mono',monospace;font-size:0.6rem;padding:4px 11px;border:1px solid;letter-spacing:0.1em;}
+.p-lime{border-color:var(--lime);color:var(--lime);background:rgba(141,255,0,0.06);}
+.p-blue{border-color:var(--blue);color:var(--blue);background:rgba(0,207,255,0.06);}
+.p-amber{border-color:var(--amber);color:var(--amber);background:rgba(255,184,0,0.06);}
+.p-red{border-color:var(--red);color:var(--red);background:rgba(255,58,58,0.06);animation:blink 1.4s infinite;}
+
+/* ── DISTINCTION BANNER ── */
+.distinction{display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin:1rem 0;}
+@media(max-width:700px){.distinction{grid-template-columns:1fr;}}
+.dist-card{padding:0.8rem 1rem;border:1px solid;}
+.dist-card.c-omega{border-color:var(--lime);background:rgba(141,255,0,0.04);}
+.dist-card.godel{border-color:var(--purple);background:rgba(176,96,255,0.04);}
+.dist-card .dc-label{font-family:'Share Tech Mono',monospace;font-size:0.58rem;letter-spacing:0.15em;margin-bottom:4px;}
+.dist-card .dc-name{font-size:1rem;font-weight:800;margin-bottom:3px;}
+.dist-card .dc-desc{font-size:0.75rem;color:var(--muted);line-height:1.55;}
+
+/* ── MAIN LAYOUT ── */
+.main{display:grid;grid-template-columns:1fr 440px;gap:1.2rem;margin-top:1.2rem;}
+@media(max-width:1000px){.main{grid-template-columns:1fr;}}
+
+/* ── 3D CHIP CANVAS ── */
+.chip-wrap{background:var(--card);border:1px solid var(--border);position:relative;overflow:hidden;}
+.chip-wrap canvas{display:block;width:100%;height:480px;}
+.chip-hud{position:absolute;top:12px;left:12px;font-family:'Share Tech Mono',monospace;font-size:0.62rem;line-height:2;pointer-events:none;}
+.chip-foot{position:absolute;bottom:12px;left:14px;right:14px;display:flex;justify-content:space-between;align-items:flex-end;}
+.chip-foot h2{font-size:1.5rem;font-weight:800;color:var(--lime);letter-spacing:0.06em;text-shadow:0 0 24px rgba(141,255,0,0.6);}
+.chip-foot .hw-spec{font-family:'Share Tech Mono',monospace;font-size:0.58rem;color:var(--muted);text-align:right;line-height:1.8;}
+
+/* ── RIGHT PANEL ── */
+.rpanel{display:flex;flex-direction:column;gap:0.9rem;}
+
+/* ── EMISSION CALCULATOR ── */
+.emission-calc{background:var(--card);border:1px solid var(--border);padding:1rem;}
+.ec-title{font-family:'Share Tech Mono',monospace;font-size:0.62rem;color:var(--lime);letter-spacing:0.14em;margin-bottom:0.75rem;}
+.stake-slider{width:100%;margin:6px 0;accent-color:var(--lime);}
+.ec-stats{display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-top:0.6rem;}
+.ec-stat{background:var(--bg3);padding:0.6rem 0.75rem;}
+.ec-label{font-family:'Share Tech Mono',monospace;font-size:0.55rem;color:var(--muted);letter-spacing:0.1em;margin-bottom:3px;}
+.ec-val{font-size:1.1rem;font-weight:800;line-height:1.1;}
+.ec-sub{font-size:0.6rem;color:var(--muted);margin-top:2px;}
+.multiplier-pills{display:flex;gap:5px;flex-wrap:wrap;margin-top:0.5rem;}
+.mult-pill{font-family:'Share Tech Mono',monospace;font-size:0.6rem;padding:3px 9px;border:1px solid var(--border);cursor:pointer;transition:all 0.2s;}
+.mult-pill.active,.mult-pill:hover{border-color:var(--lime);color:var(--lime);background:rgba(141,255,0,0.08);}
+
+/* ── STAT ROW ── */
+.stat-row{display:grid;grid-template-columns:1fr 1fr;gap:0.6rem;}
+.stat-card{background:var(--card);border:1px solid var(--border);padding:0.75rem 0.85rem;}
+.sl{font-family:'Share Tech Mono',monospace;font-size:0.55rem;color:var(--muted);letter-spacing:0.12em;margin-bottom:3px;}
+.sv{font-size:1.25rem;font-weight:800;line-height:1.1;}
+.ss{font-size:0.6rem;color:var(--muted);margin-top:2px;}
+
+/* ── MODEL LIST ── */
+.model-panel{background:var(--card);border:1px solid var(--border);padding:0.9rem;}
+.mpanel-hdr{font-family:'Share Tech Mono',monospace;font-size:0.62rem;color:var(--lime);letter-spacing:0.12em;margin-bottom:0.6rem;display:flex;justify-content:space-between;}
+.model-list{display:flex;flex-direction:column;gap:4px;max-height:190px;overflow-y:auto;}
+.model-list::-webkit-scrollbar{width:2px;}
+.model-list::-webkit-scrollbar-thumb{background:var(--lime);}
+.mitem{display:flex;align-items:center;gap:7px;padding:5px 8px;background:var(--bg3);border:1px solid transparent;cursor:pointer;transition:all 0.18s;}
+.mitem:hover,.mitem.active{border-color:var(--lime);background:rgba(141,255,0,0.05);}
+.mdot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.mname{font-size:0.78rem;font-weight:600;flex:1;}
+.mp{font-family:'Share Tech Mono',monospace;font-size:0.58rem;color:var(--muted);min-width:34px;}
+.mbarw{width:52px;height:3px;background:rgba(255,255,255,0.06);}
+.mbar{height:3px;}
+.mpct{font-family:'Share Tech Mono',monospace;font-size:0.58rem;width:26px;text-align:right;}
+/* coord agent badge */
+.coord-badge{display:flex;align-items:center;gap:6px;padding:5px 8px;background:rgba(255,184,0,0.08);border:1px solid var(--amber);margin-bottom:5px;}
+.coord-badge span{font-size:0.75rem;font-weight:600;color:var(--amber);}
+.coord-badge .cbdot{width:7px;height:7px;border-radius:50%;background:var(--amber);animation:blink 1s infinite;}
+
+/* ── TERMINAL ── */
+.terminal{background:#020507;border:1px solid var(--border);}
+.term-hdr{display:flex;align-items:center;gap:7px;padding:7px 12px;border-bottom:1px solid var(--border);background:var(--card);}
+.td{width:8px;height:8px;border-radius:50%;}
+.term-t{font-family:'Share Tech Mono',monospace;font-size:0.6rem;color:var(--muted);flex:1;letter-spacing:0.08em;}
+.term-body{padding:9px 13px;min-height:120px;max-height:155px;overflow-y:auto;font-family:'Share Tech Mono',monospace;font-size:0.68rem;line-height:1.8;}
+.term-body::-webkit-scrollbar{width:2px;}
+.term-body::-webkit-scrollbar-thumb{background:var(--lime);}
+.tl{margin:1px 0;}
+.tg{color:var(--lime)}.tb{color:var(--blue)}.tp{color:var(--purple)}.tm{color:var(--muted)}.ta{color:var(--amber)}.tr{color:var(--red)}.tt{color:var(--teal)}.tk{color:var(--pink)}
+.term-inp-row{display:flex;border-top:1px solid var(--border);background:var(--card);}
+.tprompt{padding:7px 10px;font-family:'Share Tech Mono',monospace;font-size:0.68rem;color:var(--lime);white-space:nowrap;}
+.tinput{flex:1;background:transparent;border:none;color:var(--text);font-family:'Share Tech Mono',monospace;font-size:0.68rem;padding:7px 0;outline:none;}
+.trun{padding:7px 14px;background:rgba(141,255,0,0.09);border:none;border-left:1px solid var(--border);color:var(--lime);font-family:'Share Tech Mono',monospace;font-size:0.6rem;cursor:pointer;letter-spacing:0.1em;transition:background 0.2s;}
+.trun:hover{background:rgba(141,255,0,0.2);}
+
+/* ── BOTTOM ── */
+.bottom{display:grid;grid-template-columns:2fr 1fr;gap:1rem;margin-top:1.2rem;}
+@media(max-width:900px){.bottom{grid-template-columns:1fr;}}
+.arch-panel,.val-panel{background:var(--card);border:1px solid var(--border);padding:1rem;}
+.pan-title{font-family:'Share Tech Mono',monospace;font-size:0.62rem;color:var(--lime);letter-spacing:0.14em;margin-bottom:0.65rem;}
+.arch-grid{display:grid;grid-template-columns:1fr 1fr;gap:0.55rem;}
+.aitem{background:var(--bg3);padding:0.6rem 0.75rem;border-left:3px solid;}
+.aitem h4{font-size:0.73rem;font-weight:600;margin-bottom:3px;}
+.aitem p{font-size:0.63rem;color:var(--muted);line-height:1.5;}
+.vnet{display:flex;gap:6px;flex-wrap:wrap;margin-top:0.5rem;}
+.vnode{width:34px;height:34px;border:1px solid;display:grid;place-items:center;font-family:'Share Tech Mono',monospace;font-size:0.52rem;cursor:pointer;transition:all 0.3s;text-align:center;}
+.vnode.self{border-color:var(--lime);color:var(--lime);}
+.vnode.peer{border-color:var(--blue);color:var(--blue);}
+.vnode.sync{border-color:var(--amber);color:var(--amber);animation:blink 0.9s infinite;}
+
+/* ── SALE BANNER ── */
+.sale{display:grid;grid-template-columns:1fr auto;gap:1.5rem;align-items:center;background:linear-gradient(120deg,rgba(141,255,0,0.07),rgba(0,207,255,0.05));border:1px solid var(--lime);padding:1.2rem 1.5rem;margin-top:1.2rem;flex-wrap:wrap;}
+@media(max-width:700px){.sale{grid-template-columns:1fr;}}
+.sale-left h3{font-size:1rem;font-weight:800;color:var(--lime);margin-bottom:4px;}
+.sale-left p{font-size:0.76rem;color:var(--muted);line-height:1.6;}
+.sale-right{display:flex;flex-direction:column;align-items:center;gap:8px;}
+.countdown{font-family:'Share Tech Mono',monospace;font-size:1.15rem;color:var(--amber);letter-spacing:0.08em;}
+.cta{padding:10px 26px;background:var(--lime);color:#000;font-weight:800;font-size:0.85rem;border:none;cursor:pointer;font-family:'Exo 2',sans-serif;letter-spacing:0.04em;transition:all 0.2s;}
+.cta:hover{background:#b8ff40;box-shadow:0 0 20px rgba(141,255,0,0.4);}
+
+footer{margin-top:1.5rem;padding-top:0.9rem;border-top:1px solid var(--border);display:flex;justify-content:space-between;flex-wrap:wrap;gap:0.5rem;font-family:'Share Tech Mono',monospace;font-size:0.56rem;color:var(--muted);}
+
+@keyframes ringpulse{0%,100%{opacity:0.25;transform:scale(1);}50%{opacity:0.8;transform:scale(1.08);}}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:0.2;}}
+@keyframes fadein{from{opacity:0;transform:translateX(-5px);}to{opacity:1;transform:none;}}
+.fi{animation:fadein 0.22s ease forwards;}
+</style>
+</head>
+<body>
+<canvas id="bg"></canvas>
+<div class="wrap">
+
+<!-- HEADER -->
+<header>
+  <div class="brand">
+    <div class="chip-icon"><span>C-Ω<br>ASIC</span></div>
+    <div class="brand-text">
+      <div class="name">TWINSTOR AI BLOCKCHAIN</div>
+      <div class="sub">C-OMEGA VLLM NODE // EVM-COMPATIBLE // FHE + ZK PRIVACY // twinstor.xyz</div>
+    </div>
+  </div>
+  <div class="pills">
+    <span class="pill p-lime">ERC20 TWN LIVE</span>
+    <span class="pill p-red">● PRIVATE SALE</span>
+    <span class="pill p-amber">MAINNET Q3 2026</span>
+    <span class="pill p-blue">twinstor.xyz</span>
+  </div>
+</header>
+
+<!-- DISTINCTION BANNER -->
+<div class="distinction">
+  <div class="dist-card c-omega">
+    <div class="dc-label" style="color:var(--lime)">THIS DEVICE — TWINSTOR AI BLOCKCHAIN</div>
+    <div class="dc-name" style="color:var(--lime)">C-Omega ASIC Validator Node</div>
+    <div class="dc-desc">EVM-compatible VLLM inference engine + BFT validator. Runs 10+ open-source LLMs coordinated by a master AI agent. FHE-encrypted, ZK-proof-verified, on-chain. Stake TWN tokens → earn API emission credits.</div>
+  </div>
+  <div class="dist-card godel">
+    <div class="dc-label" style="color:var(--purple)">SISTER TECHNOLOGY — AUMNIUM</div>
+    <div class="dc-name" style="color:var(--purple)">Gödel HPU — Supraturing Prime Core</div>
+    <div class="dc-desc">Magnonic-photonic hypercomputing chip powering Aumnium's suprahuman cognition layer for fully autonomous embodied physical agents — humanoid robots, drones, space drones, nanobots and smart matter swarms.</div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- 3D CHIP -->
+  <div class="chip-wrap">
+    <canvas id="chip3d"></canvas>
+    <div class="chip-hud">
+      <div style="color:var(--lime)">C-OMEGA ASIC v1.0</div>
+      <div>TEMP: <span id="hud-temp" style="color:var(--lime)">44°C</span></div>
+      <div>CLOCK: <span style="color:var(--blue)">2.6 GHz</span></div>
+      <div>FHE ENGINE: <span style="color:var(--purple)">ACTIVE</span></div>
+      <div>ZK ACC: <span style="color:var(--teal)">2,100/s</span></div>
+      <div>EVM COMPAT: <span style="color:var(--amber)">YES</span></div>
+      <div>COORD AGENT: <span id="hud-coord" style="color:var(--pink)">ROUTING</span></div>
+    </div>
+    <div class="chip-foot">
+      <div>
+        <h2>C-OMEGA</h2>
+        <div style="font-family:'Share Tech Mono',monospace;font-size:0.6rem;color:rgba(141,255,0,0.6)">VLLM VALIDATOR NODE // FHE-ZK INFERENCE ENGINE</div>
+      </div>
+      <div class="hw-spec">
+        <div>128 VLLM INFERENCE CORES</div>
+        <div>ON-CHIP FHE ACCELERATOR</div>
+        <div>ZK PROOF ENGINE</div>
+        <div>EVM-COMPATIBLE VALIDATOR</div>
+        <div>COORD AI AGENT LAYER</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT -->
+  <div class="rpanel">
+
+    <!-- EMISSION CALCULATOR -->
+    <div class="emission-calc">
+      <div class="ec-title">// TWN EMISSION CALCULATOR — STAKE TO EARN API CREDITS</div>
+      <div style="display:flex;justify-content:space-between;font-family:'Share Tech Mono',monospace;font-size:0.62rem;color:var(--muted);margin-bottom:4px;">
+        <span>TWN Staked</span><span style="color:var(--lime)" id="stake-display">5,000 TWN</span>
+      </div>
+      <input class="stake-slider" type="range" id="stake-slider" min="5000" max="5000000" step="1000" value="5000" oninput="updateEmission()">
+      <div class="multiplier-pills">
+        <span style="font-family:'Share Tech Mono',monospace;font-size:0.58rem;color:var(--muted);align-self:center;">Quick:</span>
+        <span class="mult-pill active" onclick="setStake(5000,this)">5K TWN</span>
+        <span class="mult-pill" onclick="setStake(10000,this)">10K (2x)</span>
+        <span class="mult-pill" onclick="setStake(25000,this)">25K (5x)</span>
+        <span class="mult-pill" onclick="setStake(50000,this)">50K (10x)</span>
+        <span class="mult-pill" onclick="setStake(500000,this)">500K (100x)</span>
+        <span class="mult-pill" onclick="setStake(5000000,this)">5M (1000x)</span>
+      </div>
+      <div class="ec-stats">
+        <div class="ec-stat">
+          <div class="ec-label">LOCAL CALLS / 24H</div>
+          <div class="ec-val" style="color:var(--lime)" id="local-calls">10,000</div>
+          <div class="ec-sub">on-device inference</div>
+        </div>
+        <div class="ec-stat">
+          <div class="ec-label">ON-CHAIN CALLS / 24H</div>
+          <div class="ec-val" style="color:var(--blue)" id="chain-calls">1,000</div>
+          <div class="ec-sub">blockchain verified</div>
+        </div>
+        <div class="ec-stat">
+          <div class="ec-label">EMISSION MULTIPLIER</div>
+          <div class="ec-val" style="color:var(--amber)" id="mult-display">1x</div>
+          <div class="ec-sub">base emission rate</div>
+        </div>
+        <div class="ec-stat">
+          <div class="ec-label">TWN EMISSION / DAY</div>
+          <div class="ec-val" style="color:var(--purple)" id="emission-day">12 TWN</div>
+          <div class="ec-sub">as API credit score</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STATS -->
+    <div class="stat-row">
+      <div class="stat-card"><div class="sl">TOKENS/SEC</div><div class="sv" style="color:var(--lime)" id="tok-s">38,400</div><div class="ss">aggregate LLM output</div></div>
+      <div class="stat-card"><div class="sl">ZK PROOFS/SEC</div><div class="sv" style="color:var(--blue)" id="zk-s">2,100</div><div class="ss">FHE verified</div></div>
+      <div class="stat-card"><div class="sl">MIN STAKE</div><div class="sv" style="color:var(--amber)">5,000</div><div class="ss">TWN tokens</div></div>
+      <div class="stat-card"><div class="sl">EVM COMPAT</div><div class="sv" style="color:var(--teal)">YES</div><div class="ss">Twinstor chain</div></div>
+    </div>
+
+    <!-- MODELS -->
+    <div class="model-panel">
+      <div class="mpanel-hdr">
+        <span>// LLMs + COORD AGENT — CLICK TO QUERY</span>
+        <span style="color:var(--muted)" id="active-lbl">COORD AGENT</span>
+      </div>
+      <!-- Coordination Agent -->
+      <div class="coord-badge" id="coord-item" onclick="selectCoord()" style="cursor:pointer">
+        <div class="cbdot"></div>
+        <span>COORDINATION AGENT</span>
+        <span style="font-family:'Share Tech Mono',monospace;font-size:0.58rem;color:var(--muted);margin-left:auto;">LLM MANAGER</span>
+        <span style="font-family:'Share Tech Mono',monospace;font-size:0.58rem;color:var(--amber);">ACTIVE</span>
+      </div>
+      <div class="model-list" id="mlist"></div>
+    </div>
+
+    <!-- TERMINAL -->
+    <div class="terminal">
+      <div class="term-hdr">
+        <div class="td" style="background:#ff3a3a"></div>
+        <div class="td" style="background:#ffb800"></div>
+        <div class="td" style="background:#8dff00"></div>
+        <div class="term-t">C-OMEGA TERMINAL // FHE SESSION // EVM CHAIN: twinstor.xyz</div>
+      </div>
+      <div class="term-body" id="tbody">
+        <div class="tl tm">// C-Omega VLLM Node v1.0.0-alpha — Twinstor AI Blockchain</div>
+        <div class="tl tg">✓ C-Omega ASIC online — 128 VLLM inference cores active</div>
+        <div class="tl tb">✓ EVM validator registered — BFT peer sync complete</div>
+        <div class="tl tp">✓ FHE engine: CKKS lattice encryption initialised</div>
+        <div class="tl tt">✓ ZK proof accelerator: 2,100 proofs/sec</div>
+        <div class="tl ta">✓ Coordination Agent: ONLINE — managing 10 LLMs</div>
+        <div class="tl tg">✓ TWN staked: 5,000 — emission: 10,000 local / 1,000 chain calls</div>
+        <div class="tl tm">// Select model or Coord Agent — enter prompt to run</div>
+      </div>
+      <div class="term-inp-row">
+        <span class="tprompt">TWN@C-Ω:~$</span>
+        <input class="tinput" id="tinput" placeholder="enter prompt or @agent command..." />
+        <button class="trun" onclick="runInf()">RUN ▶</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- BOTTOM -->
+<div class="bottom">
+  <div class="arch-panel">
+    <div class="pan-title">// C-OMEGA ARCHITECTURE — FHE + FEDERATED ZK LEARNING ON EVM</div>
+    <div class="arch-grid">
+      <div class="aitem" style="border-color:var(--amber)">
+        <h4 style="color:var(--amber)">Coordination Agent</h4>
+        <p>Master AI agent orchestrates all LLMs on the C-Omega node — routing user queries and inter-agent requests to the optimal model, merging outputs, and managing context across simultaneous inference sessions.</p>
+      </div>
+      <div class="aitem" style="border-color:var(--purple)">
+        <h4 style="color:var(--purple)">Fully Homomorphic Encryption</h4>
+        <p>On-chip FHE ASIC performs AI inference entirely on encrypted data. Neither the node operator nor the network ever sees plaintext prompts or outputs — true zero-trust AI privacy.</p>
+      </div>
+      <div class="aitem" style="border-color:var(--teal)">
+        <h4 style="color:var(--teal)">Federated ZK Learning</h4>
+        <p>Custom LLM fine-tuning extended from open-source base models — collaboratively trained across the C-Omega node network using zero-knowledge proofs. No raw training data is ever shared between nodes.</p>
+      </div>
+      <div class="aitem" style="border-color:var(--blue)">
+        <h4 style="color:var(--blue)">EVM-Compatible BFT Validator</h4>
+        <p>C-Omega nodes validate Twinstor blockchain blocks using Pipelined BFT consensus. Full EVM compatibility means existing Ethereum tooling, wallets, and smart contracts work natively.</p>
+      </div>
+      <div class="aitem" style="border-color:var(--lime)">
+        <h4 style="color:var(--lime)">TWN Emission — API Credit Score</h4>
+        <p>Staking 5,000+ TWN generates daily token emissions usable as API credits: 10,000 local inference calls + 1,000 on-chain calls per 24h. Stake more to multiply — 2x, 3x, 10x, up to 1000x+.</p>
+      </div>
+      <div class="aitem" style="border-color:var(--red)">
+        <h4 style="color:var(--red)">ERC20 → Mainnet Swap</h4>
+        <p>TWN tokens are ERC20 now. At Twinstor mainnet launch (Q3 2026), all ERC20 TWN swap 1:1 to native Twinstor protocol tokens. Private sale participants receive mainnet tokens automatically.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="val-panel">
+    <div class="pan-title">// BFT VALIDATOR NETWORK</div>
+    <div style="font-size:0.7rem;color:var(--muted);margin-bottom:0.5rem">Active peers: <span style="color:var(--lime)">8</span></div>
+    <div class="vnet" id="vnet"></div>
+    <div style="margin-top:0.75rem;font-family:'Share Tech Mono',monospace;font-size:0.6rem;line-height:2.1;">
+      <div>CHAIN: <span style="color:var(--lime)">TWINSTOR EVM</span></div>
+      <div>CONSENSUS: <span style="color:var(--blue)">PIPELINED BFT</span></div>
+      <div>BLOCK: <span style="color:var(--blue)" id="blk">#0</span></div>
+      <div>FINALITY: <span style="color:var(--teal)">~400ms</span></div>
+      <div>NETWORK TPS: <span style="color:var(--purple)" id="ntps">14,220</span></div>
+      <div>TWN CONTRACT: <span style="color:var(--amber)">ERC20</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- SALE BANNER -->
+<div class="sale">
+  <div class="sale-left">
+    <h3>C-OMEGA NODE PRIVATE SALE — STAKE 5,000+ TWN TOKENS</h3>
+    <p>Receive a physical C-Omega ASIC validator node. Stake minimum 5,000 TWN (ERC20) to activate base emission: <strong style="color:var(--lime)">10,000 local AI inference calls + 1,000 on-chain calls per 24 hours</strong>. Stake more to multiply emissions up to <strong style="color:var(--amber)">1000x+</strong>. TWN ERC20 swaps 1:1 to Twinstor mainnet protocol tokens at launch. Sale closes July 30, 2026.</p>
+  </div>
+  <div class="sale-right">
+    <div style="text-align:center">
+      <div style="font-family:'Share Tech Mono',monospace;font-size:0.56rem;color:var(--muted);margin-bottom:4px">SALE CLOSES IN</div>
+      <div class="countdown" id="cd">--d --h --m --s</div>
+    </div>
+    <button class="cta" onclick="window.open('https://twinstor.xyz','_blank')">STAKE TWN → GET NODE</button>
+  </div>
+</div>
+
+<footer>
+  <span>© 2026 TWINSTOR AI BLOCKCHAIN — twinstor.xyz</span>
+  <span>C-OMEGA VLLM VALIDATOR NODE — TECHNOLOGY DEMONSTRATOR v1.0</span>
+  <span>NOT FINANCIAL ADVICE — FOR DEMONSTRATION PURPOSES ONLY</span>
+</footer>
+</div>
+
+<script>
+// BG PARTICLES
+const bgC=document.getElementById('bg'),bgX=bgC.getContext('2d');
+let bW,bH,pts=[];
+function rBg(){bW=bgC.width=innerWidth;bH=bgC.height=innerHeight;}
+rBg();addEventListener('resize',rBg);
+for(let i=0;i<110;i++)pts.push({x:Math.random()*bW,y:Math.random()*bH,vx:(Math.random()-.5)*.28,vy:(Math.random()-.5)*.28,r:Math.random()*1.4+.4,c:['#8dff00','#00cfff','#b060ff','#ffb800'][i%4]});
+(function aB(){bgX.clearRect(0,0,bW,bH);bgX.globalAlpha=.45;pts.forEach(p=>{p.x+=p.vx;p.y+=p.vy;if(p.x<0)p.x=bW;if(p.x>bW)p.x=0;if(p.y<0)p.y=bH;if(p.y>bH)p.y=0;bgX.beginPath();bgX.arc(p.x,p.y,p.r,0,Math.PI*2);bgX.fillStyle=p.c;bgX.fill();});bgX.globalAlpha=.04;pts.forEach((a,i)=>pts.slice(i+1).forEach(b=>{const d=Math.hypot(a.x-b.x,a.y-b.y);if(d<100){bgX.beginPath();bgX.strokeStyle=a.c;bgX.lineWidth=.4;bgX.moveTo(a.x,a.y);bgX.lineTo(b.x,b.y);bgX.stroke();}}));bgX.globalAlpha=1;requestAnimationFrame(aB);})();
+
+// 3D CHIP
+const chip=document.getElementById('chip3d'),cx3=chip.getContext('2d');
+let cW,cH,rot=0;
+function rC(){const r=chip.parentElement.getBoundingClientRect();chip.width=cW=(r.width||800)*devicePixelRatio;chip.height=cH=480*devicePixelRatio;chip.style.width=r.width+'px';chip.style.height='480px';}
+rC();addEventListener('resize',rC);
+function proj(x,y,z,ox,oy){const f=860,rx=Math.cos(.26)*y-Math.sin(.26)*z,rz=Math.sin(.26)*y+Math.cos(.26)*z,rx2=Math.cos(rot)*x-Math.sin(rot)*rz,rz2=Math.sin(rot)*x+Math.cos(rot)*rz,sc=f/(f+rz2+320);return{x:ox+rx2*sc,y:oy+rx*sc,s:sc};}
+const MC=['#8dff00','#00cfff','#b060ff','#ffb800','#00ffcc','#ff3a3a','#ff60c0','#60ff80','#a0c0ff','#ffd060'];
+const CORES=[];
+for(let r=0;r<8;r++)for(let c=0;c<8;c++)CORES.push({r,c,m:Math.floor(Math.random()*10),a:Math.random()>.1,l:Math.random()});
+
+function drawChip(){
+  cx3.clearRect(0,0,cW,cH);
+  const ox=cW*.5,oy=cH*.52,sc=Math.min(cW,cH)*.0012;
+  // base die faces
+  [
+    [[-170,-170,7],[170,-170,7],[170,170,7],[-170,170,7],'rgba(13,18,26,.96)'],
+    [[-170,170,7],[170,170,7],[170,170,-6],[-170,170,-6],'rgba(9,13,20,.9)'],
+    [[170,-170,7],[170,170,7],[170,170,-6],[170,-170,-6],'rgba(7,10,16,.85)'],
+  ].forEach((face)=>{
+    const col=face[face.length-1];
+    const pts2=face.slice(0,face.length-1);
+    const pp=pts2.map(function(v){return proj(v[0]*sc,v[1]*sc,v[2]*sc,ox,oy);});
+    cx3.beginPath();pp.forEach((p,i)=>i?cx3.lineTo(p.x,p.y):cx3.moveTo(p.x,p.y));cx3.closePath();
+    cx3.fillStyle=col;cx3.fill();cx3.strokeStyle='rgba(141,255,0,.14)';cx3.lineWidth=.5;cx3.stroke();
+  });
+  // cores
+  const g=-119,st=34;
+  CORES.forEach(core=>{
+    if(!core.a)return;
+    const bx=g+core.c*st,by=g+core.r*st,s=12,h=3+core.l*6,col=MC[core.m];
+    const pp=[[bx-s,by-s,7+h],[bx+s,by-s,7+h],[bx+s,by+s,7+h],[bx-s,by+s,7+h]].map(([x,y,z])=>proj(x*sc,y*sc,z*sc,ox,oy));
+    cx3.beginPath();pp.forEach((p,i)=>i?cx3.lineTo(p.x,p.y):cx3.moveTo(p.x,p.y));cx3.closePath();
+    cx3.fillStyle=col+'18';cx3.fill();cx3.strokeStyle=col+'65';cx3.lineWidth=.6;cx3.stroke();
+    const pulse=(Math.sin(Date.now()*.003+core.r*.6+core.c*.8)+1)*.5;
+    cx3.save();cx3.globalAlpha=.1+pulse*.2;cx3.shadowColor=col;cx3.shadowBlur=6;
+    cx3.beginPath();pp.forEach((p,i)=>i?cx3.lineTo(p.x,p.y):cx3.moveTo(p.x,p.y));cx3.closePath();cx3.fillStyle=col;cx3.fill();cx3.restore();
+  });
+  // coord agent central highlight
+  const cp=proj(0,0,14*sc,ox,oy);
+  cx3.save();cx3.globalAlpha=.12+.08*Math.sin(Date.now()*.002);
+  cx3.beginPath();cx3.arc(cp.x,cp.y,28,0,Math.PI*2);
+  const g2=cx3.createRadialGradient(cp.x,cp.y,0,cp.x,cp.y,28);
+  g2.addColorStop(0,'#ffb800');g2.addColorStop(1,'transparent');
+  cx3.fillStyle=g2;cx3.fill();cx3.restore();
+  cx3.save();cx3.font='bold '+(8*Math.min(cW,cH)/800)+'px Share Tech Mono';cx3.fillStyle='#ffb800';cx3.textAlign='center';cx3.fillText('COORD',cp.x,cp.y+2);cx3.restore();
+  // data streams
+  cx3.save();cx3.globalAlpha=.55;
+  for(let i=0;i<8;i++){const t=(Date.now()*.0014+i*.38)%1;const x1=-150+i*44,x2=-150+(i+1)*44,y1=-172;const p1=proj(x1*sc,y1*sc,7*sc,ox,oy),p2=proj(x2*sc,y1*sc,7*sc,ox,oy);const px=p1.x+(p2.x-p1.x)*t,py=p1.y+(p2.y-p1.y)*t;cx3.beginPath();cx3.arc(px,py,2.5,0,Math.PI*2);cx3.fillStyle=MC[i%10];cx3.shadowColor=MC[i%10];cx3.shadowBlur=7;cx3.fill();}
+  cx3.restore();
+  // BFT validator ring
+  for(let i=0;i<8;i++){const a=i/8*Math.PI*2+Date.now()*.0007;const bp=proj(Math.cos(a)*108*sc,0,7*sc,ox,oy);cx3.beginPath();cx3.arc(bp.x,bp.y,4,0,Math.PI*2);cx3.fillStyle=i===0?'#8dff00':'#00cfff';cx3.shadowColor=i===0?'#8dff00':'#00cfff';cx3.shadowBlur=9;cx3.fill();const a2=(i+1)/8*Math.PI*2+Date.now()*.0007;const b2=proj(Math.cos(a2)*108*sc,0,7*sc,ox,oy);cx3.beginPath();cx3.moveTo(bp.x,bp.y);cx3.lineTo(b2.x,b2.y);cx3.strokeStyle='rgba(0,207,255,.15)';cx3.lineWidth=.5;cx3.stroke();}
+  rot+=.004;
+}
+(function aC(){drawChip();requestAnimationFrame(aC);})();
+
+// MODELS
+const MODELS=[
+  {n:'GLM-4-9B',p:'9B',c:'#8dff00',l:.80},{n:'Llama-3.1-8B',p:'8B',c:'#00cfff',l:.74},
+  {n:'Mistral-7B',p:'7B',c:'#b060ff',l:.67},{n:'Qwen2.5-7B',p:'7B',c:'#ffb800',l:.70},
+  {n:'DeepSeek-R1-7B',p:'7B',c:'#00ffcc',l:.86},{n:'Phi-4-Mini',p:'3.8B',c:'#ff3a3a',l:.54},
+  {n:'Gemma-3-4B',p:'4B',c:'#ff60c0',l:.60},{n:'CodeGemma-7B',p:'7B',c:'#60ff80',l:.47},
+  {n:'Qwen2.5-Coder',p:'7B',c:'#a0c0ff',l:.69},{n:'GLM-Z1-9B',p:'9B',c:'#ffd060',l:.65},
+];
+let aM=-1; // -1 = coord agent selected
+function buildML(){
+  const el=document.getElementById('mlist');el.innerHTML='';
+  // coord agent visual state
+  document.getElementById('coord-item').style.borderColor=aM===-1?'var(--amber)':'rgba(255,184,0,0.3)';
+  MODELS.forEach((m,i)=>{
+    const d=document.createElement('div');d.className='mitem'+(i===aM?' active':'');
+    d.innerHTML=`<div class="mdot" style="background:${m.c}"></div><div class="mname" style="color:${i===aM?m.c:'inherit'}">${m.n}</div><div class="mp">${m.p}</div><div class="mbarw"><div class="mbar" style="width:${m.l*100}%;background:${m.c}"></div></div><div class="mpct" style="color:${m.c}">${Math.round(m.l*100)}%</div>`;
+    d.onclick=()=>{aM=i;buildML();document.getElementById('active-lbl').textContent=m.n;};
+    el.appendChild(d);
+  });
+}
+function selectCoord(){aM=-1;buildML();document.getElementById('active-lbl').textContent='COORD AGENT';}
+buildML();
+
+// EMISSION CALC
+function updateEmission(){
+  const stake=parseInt(document.getElementById('stake-slider').value);
+  document.getElementById('stake-display').textContent=stake.toLocaleString()+' TWN';
+  const mult=Math.max(1,Math.round(stake/5000));
+  const local=10000*mult,chain=1000*mult,emDay=12*mult;
+  document.getElementById('local-calls').textContent=local.toLocaleString();
+  document.getElementById('chain-calls').textContent=chain.toLocaleString();
+  document.getElementById('emission-day').textContent=emDay.toLocaleString()+' TWN';
+  document.getElementById('mult-display').textContent=(mult>1?mult+'x':'1x');
+}
+function setStake(v,btn){
+  document.getElementById('stake-slider').value=v;
+  document.querySelectorAll('.mult-pill').forEach(p=>p.classList.remove('active'));
+  btn.classList.add('active');
+  updateEmission();
+}
+updateEmission();
+
+// TERMINAL
+const COORD_RESP=['COORD AGENT: routing query to optimal model...','→ Evaluating 10 LLMs for best fit','→ Selected: DeepSeek-R1-7B (reasoning task)','→ FHE: prompt encrypted with CKKS lattice','→ Inference: chain-of-thought — 6 steps','→ ZK proof: result committed on Twinstor chain','→ API credit deducted: 1 local call','→ COORD AGENT: response ready'];
+const RESP={
+  'GLM-4-9B':['→ GLM-4 knowledge graph: 9B params loaded','→ FHE ASIC: encrypting prompt...','→ Inference: 1.8ms on C-Omega core cluster','→ ZK proof: 0x4f2b...a918 — on-chain','→ API credit: 1 call deducted'],
+  'Llama-3.1-8B':['→ Llama-3.1 context: 128k token window','→ FHE: CKKS lattice — operator-blind','→ Photonic bus: data at 1.2 TB/s','→ Result: BFT verified — 8/8 peers','→ API credit: 1 call deducted'],
+  'DeepSeek-R1-7B':['→ DeepSeek-R1 reasoning mode: ENGAGED','→ Chain-of-thought: 7 reasoning steps','→ ZK proof: reasoning trace committed','→ Federated delta: synced to peer nodes','→ FINALIZED on Twinstor block'],
+};
+function getR(n){return RESP[n]||['→ Routing to '+n+'...','→ FHE encrypting...','→ ZK proof generating...','→ BFT verified'];}
+let busy=false;
+function tlog(txt,cls,d){setTimeout(()=>{const el=document.getElementById('tbody');const div=document.createElement('div');div.className='tl '+cls+' fi';div.textContent=txt;el.appendChild(div);el.scrollTop=el.scrollHeight;},d||0);}
+function runInf(){
+  if(busy)return;
+  const inp=document.getElementById('tinput');
+  const pr=inp.value.trim()||(aM===-1?'@coord route to best model for: explain ZK federated learning':'Explain FHE inference on C-Omega');
+  inp.value='';busy=true;
+  if(aM===-1){
+    tlog('$ '+pr,'tg');
+    tlog('→ COORD AGENT: received query','ta',200);
+    COORD_RESP.forEach((l,i)=>tlog(l,i===COORD_RESP.length-1?'tt':'tm',400+i*320));
+    setTimeout(()=>{tlog('// ready — API credit: 1 local call used','tm');busy=false;},400+COORD_RESP.length*320+200);
+  } else {
+    const m=MODELS[aM];
+    tlog('$ '+pr,'tg');
+    tlog('→ COORD AGENT: routing to '+m.n+' ['+m.p+']','ta',180);
+    tlog('→ FHE: encrypting with CKKS...','tp',400);
+    getR(m.n).forEach((l,i)=>tlog(l,i===getR(m.n).length-1?'tt':'tm',640+i*340));
+    setTimeout(()=>{tlog('// ready — API credit: 1 local call used','tm');busy=false;},640+getR(m.n).length*340+200);
+  }
+}
+document.getElementById('tinput').addEventListener('keydown',e=>{if(e.key==='Enter')runInf();});
+
+// LIVE STATS
+function upStats(){
+  document.getElementById('tok-s').textContent=(35000+Math.floor(Math.random()*6000)).toLocaleString();
+  document.getElementById('zk-s').textContent=(1900+Math.floor(Math.random()*400)).toLocaleString();
+  document.getElementById('ntps').textContent=(12000+Math.floor(Math.random()*4000)).toLocaleString();
+  document.getElementById('blk').textContent='#'+Math.floor(Date.now()/400);
+  const t=40+Math.floor(Math.random()*14);
+  const tv=document.getElementById('hud-temp');tv.textContent=t+'°C';tv.style.color=t>48?'#ff3a3a':t>44?'#ffb800':'#8dff00';
+  const states=['ROUTING','MERGING','BATCHING','DISPATCHING','OPTIMISING'];
+  document.getElementById('hud-coord').textContent=states[Math.floor(Math.random()*states.length)];
+}
+setInterval(upStats,1200);
+
+// VALIDATOR NET
+(function bV(){
+  const el=document.getElementById('vnet');el.innerHTML='';
+  [{s:'self',l:'YOU'},{s:'peer',l:'V-02'},{s:'peer',l:'V-03'},{s:'sync',l:'V-04'},{s:'peer',l:'V-05'},{s:'peer',l:'V-06'},{s:'peer',l:'V-07'},{s:'peer',l:'V-08'}].forEach(v=>{
+    const d=document.createElement('div');d.className='vnode '+v.s;d.textContent=v.l;el.appendChild(d);
+  });
+})();
+setInterval(()=>document.querySelectorAll('.vnode.sync').forEach(n=>n.className=n.className.replace('sync','peer')),4500);
+
+// COUNTDOWN
+function upCD(){const diff=new Date('2026-07-30T23:59:59Z')-new Date();if(diff<=0){document.getElementById('cd').textContent='SALE CLOSED';return;}const d=Math.floor(diff/86400000),h=Math.floor(diff%86400000/3600000),m=Math.floor(diff%3600000/60000),s=Math.floor(diff%60000/1000);document.getElementById('cd').textContent=`${d}d ${String(h).padStart(2,'0')}h ${String(m).padStart(2,'0')}m ${String(s).padStart(2,'0')}s`;}
+setInterval(upCD,1000);upCD();
+
+// AUTO DEMO
+const dQ=['@coord what is FHE inference?','Explain ZK federated learning','How does BFT consensus work?','@coord route query to coding model','What is the TWN emission model?','Describe C-Omega vs Gödel HPU'];
+let dI=0;
+setInterval(()=>{if(busy)return;if(Math.random()>.5)selectCoord();else{aM=Math.floor(Math.random()*MODELS.length);buildML();}document.getElementById('active-lbl').textContent=aM===-1?'COORD AGENT':MODELS[aM].n;document.getElementById('tinput').value=dQ[dI++%dQ.length];runInf();},11000);
+</script>
+</body>
+</html>
